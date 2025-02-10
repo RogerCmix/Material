@@ -21,9 +21,6 @@ const materialsRef = ref(database, 'materiales');
 // Referencias a elementos del DOM
 const materialsTableBody = document.querySelector('#materialsTable tbody');
 const searchInput = document.getElementById('searchInput');
-const windowSelector = document.getElementById('windowSelector');
-const consultaWindow = document.getElementById('consultaWindow');
-const entradaWindow = document.getElementById('entradaWindow');
 const materialForm = document.getElementById('materialForm');
 
 // Función para cargar todos los materiales desde Firebase
@@ -77,15 +74,23 @@ materialForm.addEventListener('submit', (e) => {
 
     // Obtener los valores del formulario
     const id = materialForm.id.value;
+    const tarifaProv = parseFloat(materialForm.tarifaProv.value);
+    const dtoProv = parseFloat(materialForm.dtoProv.value);
+
+    // Calcular valores derivados
+    const precioNeto = tarifaProv - (tarifaProv * (dtoProv / 100));
+    const dtoVenta = Math.max(dtoProv, 45); // DTO Venta es el máximo entre DTO Proveedor y 45
+    const tarifaVenta = precioNeto + (precioNeto * (dtoVenta / 100));
+
     const material = {
         descripcion: materialForm.descripcion.value,
         fabricante: materialForm.fabricante.value,
         referencia: materialForm.referencia.value,
-        tarifaVenta: parseFloat(materialForm.tarifaVenta.value),
-        dtoVenta: parseFloat(materialForm.dtoVenta.value),
-        tarifaProv: parseFloat(materialForm.tarifaProv.value),
-        dtoProv: parseFloat(materialForm.dtoProv.value),
-        precioNeto: parseFloat(materialForm.precioNeto.value),
+        tarifaVenta: tarifaVenta,
+        dtoVenta: dtoVenta,
+        tarifaProv: tarifaProv,
+        dtoProv: dtoProv,
+        precioNeto: precioNeto,
         fechaActualizacion: materialForm.fechaActualizacion.value,
         notas: materialForm.notas.value
     };
@@ -98,7 +103,7 @@ materialForm.addEventListener('submit', (e) => {
     }
 
     materialForm.reset(); // Limpiar el formulario
-    showWindow('consulta'); // Regresar a la ventana de consulta
+    loadMaterials(); // Recargar la lista de materiales
 });
 
 // Función para editar un material
@@ -111,15 +116,10 @@ function editMaterial(id) {
             materialForm.descripcion.value = material.descripcion;
             materialForm.fabricante.value = material.fabricante;
             materialForm.referencia.value = material.referencia;
-            materialForm.tarifaVenta.value = material.tarifaVenta;
-            materialForm.dtoVenta.value = material.dtoVenta;
             materialForm.tarifaProv.value = material.tarifaProv;
             materialForm.dtoProv.value = material.dtoProv;
-            materialForm.precioNeto.value = material.precioNeto;
             materialForm.fechaActualizacion.value = material.fechaActualizacion;
             materialForm.notas.value = material.notas;
-
-            showWindow('entrada'); // Mostrar la ventana de entrada
         }
     });
 }
@@ -132,12 +132,5 @@ function deleteMaterial(id) {
     }
 }
 
-// Función para cambiar entre ventanas
-function showWindow(windowName) {
-    consultaWindow.classList.toggle('active', windowName === 'consulta');
-    entradaWindow.classList.toggle('active', windowName === 'entrada');
-}
-
 // Cargar materiales al iniciar la aplicación
 loadMaterials();
-showWindow('consulta'); // Arrancar siempre en modo consulta
