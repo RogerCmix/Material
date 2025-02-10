@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Materiales</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Gestión de Materiales</h1>
+
+        <!-- Formulario para añadir/editar materiales -->
+        <form id="materialForm">
+            <input type="hidden" id="id" name="id">
+            <label for="descripcion">Descripción:</label>
+            <input type="text" id="descripcion" name="descripcion" required>
+
+            <label for="fabricante">Fabricante:</label>
+            <input type="text" id="fabricante" name="fabricante" required>
+
+            <label for="referencia">Referencia:</label>
+            <input type="text" id="referencia" name="referencia" required>
+
+            <label for="tarifaVenta">Tarifa Venta:</label>
+            <input type="number" id="tarifaVenta" name="tarifaVenta" step="0.01" required>
+
+            <label for="dtoVenta">Dto Venta (%):</label>
+            <input type="number" id="dtoVenta" name="dtoVenta" step="0.01" required>
+
+            <label for="tarifaProv">Tarifa Prov.:</label>
+            <input type="number" id="tarifaProv" name="tarifaProv" step="0.01" required>
+
+            <label for="dtoProv">Dto Prov. (%):</label>
+            <input type="number" id="dtoProv" name="dtoProv" step="0.01" required>
+
+            <label for="precioNeto">Precio Neto:</label>
+            <input type="number" id="precioNeto" name="precioNeto" step="0.01" required>
+
+            <label for="fechaActualizacion">Fecha Actualización:</label>
+            <input type="date" id="fechaActualizacion" name="fechaActualizacion" required>
+
+            <label for="notas">Notas:</label>
+            <textarea id="notas" name="notas"></textarea>
+
+            <button type="submit">Guardar</button>
+        </form>
+
+        <!-- Lista de materiales -->
+        <h2>Materiales Registrados</h2>
+        <table id="materialsTable">
+            <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th>Fabricante</th>
+                    <th>Referencia</th>
+                    <th>Tarifa Venta</th>
+                    <th>Dto Venta (%)</th>
+                    <th>Tarifa Prov.</th>
+                    <th>Dto Prov (%)</th>
+                    <th>Precio Neto</th>
+                    <th>Fecha Actualización</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
