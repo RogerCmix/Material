@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
 import { getDatabase, ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-database.js";
 
-// Configuración de Firebase (la que me proporcionaste)
+// Configuración de Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyDVptkRdKOd0mMeFqi9FbQrjo4z14bbJ-o",
     authDomain: "gestionmateriales-20935.firebaseapp.com",
@@ -15,19 +15,40 @@ const firebaseConfig = {
 
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
-const database = getDatabase(app); // Obtener la referencia a la base de datos
-const materialsRef = ref(database, 'materiales'); // Referencia a la tabla "materiales"
+const database = getDatabase(app);
+const materialsRef = ref(database, 'materiales');
 
 // Referencias a elementos del DOM
-const materialForm = document.getElementById('materialForm');
 const materialsTableBody = document.querySelector('#materialsTable tbody');
+const searchInput = document.getElementById('searchInput');
+const windowSelector = document.getElementById('windowSelector');
+const consultaWindow = document.getElementById('consultaWindow');
+const entradaWindow = document.getElementById('entradaWindow');
+const materialForm = document.getElementById('materialForm');
 
-// Función para cargar materiales desde Firebase
+// Función para cargar todos los materiales desde Firebase
+let allMaterials = [];
 function loadMaterials() {
     materialsTableBody.innerHTML = ''; // Limpiar la tabla antes de cargar nuevos datos
     onValue(materialsRef, (snapshot) => {
+        allMaterials = [];
         snapshot.forEach((childSnapshot) => {
             const material = childSnapshot.val();
+            material.id = childSnapshot.key;
+            allMaterials.push(material);
+        });
+        filterMaterials(); // Filtrar los materiales al cargar
+    });
+}
+
+// Función para filtrar materiales
+function filterMaterials() {
+    const query = searchInput.value.toLowerCase();
+    materialsTableBody.innerHTML = ''; // Limpiar la tabla antes de mostrar resultados
+
+    allMaterials.forEach((material) => {
+        const values = Object.values(material).join(' ').toLowerCase(); // Unir todos los campos
+        if (values.includes(query)) {
             const row = `
                 <tr>
                     <td>${material.descripcion}</td>
@@ -40,13 +61,13 @@ function loadMaterials() {
                     <td>${material.precioNeto.toFixed(2)}</td>
                     <td>${material.fechaActualizacion}</td>
                     <td>
-                        <button onclick="editMaterial('${childSnapshot.key}')">Editar</button>
-                        <button onclick="deleteMaterial('${childSnapshot.key}')">Eliminar</button>
+                        <button onclick="editMaterial('${material.id}')">Editar</button>
+                        <button onclick="deleteMaterial('${material.id}')">Eliminar</button>
                     </td>
                 </tr>
             `;
             materialsTableBody.innerHTML += row; // Agregar cada fila a la tabla
-        });
+        }
     });
 }
 
@@ -77,7 +98,7 @@ materialForm.addEventListener('submit', (e) => {
     }
 
     materialForm.reset(); // Limpiar el formulario
-    loadMaterials(); // Recargar la lista de materiales
+    showWindow('consulta'); // Regresar a la ventana de consulta
 });
 
 // Función para editar un material
@@ -97,6 +118,8 @@ function editMaterial(id) {
             materialForm.precioNeto.value = material.precioNeto;
             materialForm.fechaActualizacion.value = material.fechaActualizacion;
             materialForm.notas.value = material.notas;
+
+            showWindow('entrada'); // Mostrar la ventana de entrada
         }
     });
 }
@@ -109,5 +132,12 @@ function deleteMaterial(id) {
     }
 }
 
+// Función para cambiar entre ventanas
+function showWindow(windowName) {
+    consultaWindow.classList.toggle('active', windowName === 'consulta');
+    entradaWindow.classList.toggle('active', windowName === 'entrada');
+}
+
 // Cargar materiales al iniciar la aplicación
 loadMaterials();
+showWindow('consulta'); // Arrancar siempre en modo consulta
