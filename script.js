@@ -1,6 +1,6 @@
 // Importar las funciones necesarias de Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { getDatabase, ref, onValue, push, update, remove, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -68,19 +68,22 @@ function renderMaterials() {
         materialsTableBody.innerHTML += row; // Agregar cada fila a la tabla
     });
 
-    // Adjuntar eventos delegados
-    materialsTableBody.addEventListener('click', (e) => {
-        const target = e.target;
-        const row = target.closest('tr'); // Obtener la fila padre
-        if (!row) return;
+    // Adjuntar un solo manejador de eventos delegados
+    materialsTableBody.addEventListener('click', handleMaterialActions);
+}
 
-        const id = row.getAttribute('data-id'); // Obtener el ID del material
-        if (target.classList.contains('edit-btn')) {
-            editMaterial(id); // Llamar a la función de edición
-        } else if (target.classList.contains('delete-btn')) {
-            deleteMaterial(id); // Llamar a la función de eliminación
-        }
-    });
+// Función para manejar acciones (Editar/Eliminar)
+function handleMaterialActions(e) {
+    const target = e.target;
+    const row = target.closest('tr'); // Obtener la fila padre
+    if (!row) return;
+
+    const id = row.getAttribute('data-id'); // Obtener el ID del material
+    if (target.classList.contains('edit-btn')) {
+        editMaterial(id); // Llamar a la función de edición
+    } else if (target.classList.contains('delete-btn')) {
+        deleteMaterial(id); // Llamar a la función de eliminación
+    }
 }
 
 // Función para filtrar materiales
@@ -112,19 +115,8 @@ function filterMaterials() {
         }
     });
 
-    // Adjuntar eventos delegados después de filtrar
-    materialsTableBody.addEventListener('click', (e) => {
-        const target = e.target;
-        const row = target.closest('tr'); // Obtener la fila padre
-        if (!row) return;
-
-        const id = row.getAttribute('data-id'); // Obtener el ID del material
-        if (target.classList.contains('edit-btn')) {
-            editMaterial(id); // Llamar a la función de edición
-        } else if (target.classList.contains('delete-btn')) {
-            deleteMaterial(id); // Llamar a la función de eliminación
-        }
-    });
+    // Reasignar el manejador de eventos después de filtrar
+    materialsTableBody.addEventListener('click', handleMaterialActions);
 }
 
 // Función para guardar un material
