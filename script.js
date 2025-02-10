@@ -31,10 +31,36 @@ function loadMaterials() {
         allMaterials = [];
         snapshot.forEach((childSnapshot) => {
             const material = childSnapshot.val();
-            material.id = childSnapshot.key;
+            material.id = childSnapshot.key; // Agregar el ID del material
             allMaterials.push(material);
         });
-        filterMaterials(); // Filtrar los materiales al cargar
+        renderMaterials(); // Renderizar los materiales en la tabla
+    });
+}
+
+// Función para renderizar los materiales en la tabla
+function renderMaterials() {
+    materialsTableBody.innerHTML = ''; // Limpiar la tabla antes de mostrar resultados
+
+    allMaterials.forEach((material) => {
+        const row = `
+            <tr>
+                <td>${material.descripcion}</td>
+                <td>${material.fabricante}</td>
+                <td>${material.referencia}</td>
+                <td>${material.tarifaVenta.toFixed(2)}</td>
+                <td>${material.dtoVenta}%</td>
+                <td>${material.tarifaProv.toFixed(2)}</td>
+                <td>${material.dtoProv}%</td>
+                <td>${material.precioNeto.toFixed(2)}</td>
+                <td>${material.fechaActualizacion}</td>
+                <td>
+                    <button onclick="editMaterial('${material.id}')">Editar</button>
+                    <button onclick="deleteMaterial('${material.id}')">Eliminar</button>
+                </td>
+            </tr>
+        `;
+        materialsTableBody.innerHTML += row; // Agregar cada fila a la tabla
     });
 }
 
@@ -97,13 +123,20 @@ materialForm.addEventListener('submit', (e) => {
 
     // Si hay un ID, actualizar el material existente; de lo contrario, crear uno nuevo
     if (id) {
-        update(ref(database, `materiales/${id}`), material); // Actualizar material existente
+        update(ref(database, `materiales/${id}`), material) // Actualizar material existente
+            .then(() => {
+                materialForm.reset(); // Limpiar el formulario
+                loadMaterials(); // Recargar la lista de materiales
+            })
+            .catch((error) => console.error('Error al actualizar:', error));
     } else {
-        push(materialsRef, material); // Crear un nuevo material
+        push(materialsRef, material) // Crear un nuevo material
+            .then(() => {
+                materialForm.reset(); // Limpiar el formulario
+                loadMaterials(); // Recargar la lista de materiales
+            })
+            .catch((error) => console.error('Error al guardar:', error));
     }
-
-    materialForm.reset(); // Limpiar el formulario
-    loadMaterials(); // Recargar la lista de materiales
 });
 
 // Función para editar un material
@@ -121,14 +154,15 @@ function editMaterial(id) {
             materialForm.fechaActualizacion.value = material.fechaActualizacion;
             materialForm.notas.value = material.notas;
         }
-    });
+    }).catch((error) => console.error('Error al cargar material:', error));
 }
 
 // Función para eliminar un material
 function deleteMaterial(id) {
     if (confirm('¿Estás seguro de que deseas eliminar este material?')) {
-        remove(ref(database, `materiales/${id}`)); // Eliminar el material por su ID
-        loadMaterials(); // Recargar la lista de materiales
+        remove(ref(database, `materiales/${id}`)) // Eliminar el material por su ID
+            .then(() => loadMaterials()) // Recargar la lista de materiales
+            .catch((error) => console.error('Error al eliminar:', error));
     }
 }
 
