@@ -1,6 +1,6 @@
 // Importar las funciones necesarias de Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
-import { getDatabase, ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -26,6 +26,7 @@ const materialForm = document.getElementById('materialForm');
 // Función para cargar todos los materiales desde Firebase
 let allMaterials = [];
 function loadMaterials() {
+    console.log("Cargando materiales desde Firebase...");
     materialsTableBody.innerHTML = ''; // Limpiar la tabla antes de cargar nuevos datos
     onValue(materialsRef, (snapshot) => {
         allMaterials = [];
@@ -34,17 +35,21 @@ function loadMaterials() {
             material.id = childSnapshot.key; // Agregar el ID del material
             allMaterials.push(material);
         });
+        console.log("Materiales cargados:", allMaterials);
         renderMaterials(); // Renderizar los materiales en la tabla
+    }, (error) => {
+        console.error("Error al cargar materiales:", error);
     });
 }
 
 // Función para renderizar los materiales en la tabla
 function renderMaterials() {
+    console.log("Renderizando materiales en la tabla...");
     materialsTableBody.innerHTML = ''; // Limpiar la tabla antes de mostrar resultados
 
     allMaterials.forEach((material) => {
         const row = `
-            <tr>
+            <tr data-id="${material.id}">
                 <td>${material.descripcion}</td>
                 <td>${material.fabricante}</td>
                 <td>${material.referencia}</td>
@@ -55,12 +60,26 @@ function renderMaterials() {
                 <td>${material.precioNeto.toFixed(2)}</td>
                 <td>${material.fechaActualizacion}</td>
                 <td>
-                    <button onclick="editMaterial('${material.id}')">Editar</button>
-                    <button onclick="deleteMaterial('${material.id}')">Eliminar</button>
+                    <button class="edit-btn">Editar</button>
+                    <button class="delete-btn">Eliminar</button>
                 </td>
             </tr>
         `;
         materialsTableBody.innerHTML += row; // Agregar cada fila a la tabla
+    });
+
+    // Adjuntar eventos delegados
+    materialsTableBody.addEventListener('click', (e) => {
+        const target = e.target;
+        const row = target.closest('tr'); // Obtener la fila padre
+        if (!row) return;
+
+        const id = row.getAttribute('data-id'); // Obtener el ID del material
+        if (target.classList.contains('edit-btn')) {
+            editMaterial(id); // Llamar a la función de edición
+        } else if (target.classList.contains('delete-btn')) {
+            deleteMaterial(id); // Llamar a la función de eliminación
+        }
     });
 }
 
@@ -73,7 +92,7 @@ function filterMaterials() {
         const values = Object.values(material).join(' ').toLowerCase(); // Unir todos los campos
         if (values.includes(query)) {
             const row = `
-                <tr>
+                <tr data-id="${material.id}">
                     <td>${material.descripcion}</td>
                     <td>${material.fabricante}</td>
                     <td>${material.referencia}</td>
@@ -84,12 +103,26 @@ function filterMaterials() {
                     <td>${material.precioNeto.toFixed(2)}</td>
                     <td>${material.fechaActualizacion}</td>
                     <td>
-                        <button onclick="editMaterial('${material.id}')">Editar</button>
-                        <button onclick="deleteMaterial('${material.id}')">Eliminar</button>
+                        <button class="edit-btn">Editar</button>
+                        <button class="delete-btn">Eliminar</button>
                     </td>
                 </tr>
             `;
             materialsTableBody.innerHTML += row; // Agregar cada fila a la tabla
+        }
+    });
+
+    // Adjuntar eventos delegados después de filtrar
+    materialsTableBody.addEventListener('click', (e) => {
+        const target = e.target;
+        const row = target.closest('tr'); // Obtener la fila padre
+        if (!row) return;
+
+        const id = row.getAttribute('data-id'); // Obtener el ID del material
+        if (target.classList.contains('edit-btn')) {
+            editMaterial(id); // Llamar a la función de edición
+        } else if (target.classList.contains('delete-btn')) {
+            deleteMaterial(id); // Llamar a la función de eliminación
         }
     });
 }
@@ -121,10 +154,13 @@ materialForm.addEventListener('submit', (e) => {
         notas: materialForm.notas.value
     };
 
+    console.log("Guardando material:", material);
+
     // Si hay un ID, actualizar el material existente; de lo contrario, crear uno nuevo
     if (id) {
         update(ref(database, `materiales/${id}`), material) // Actualizar material existente
             .then(() => {
+                console.log("Material actualizado correctamente.");
                 materialForm.reset(); // Limpiar el formulario
                 loadMaterials(); // Recargar la lista de materiales
             })
@@ -132,6 +168,7 @@ materialForm.addEventListener('submit', (e) => {
     } else {
         push(materialsRef, material) // Crear un nuevo material
             .then(() => {
+                console.log("Material guardado correctamente.");
                 materialForm.reset(); // Limpiar el formulario
                 loadMaterials(); // Recargar la lista de materiales
             })
@@ -141,7 +178,7 @@ materialForm.addEventListener('submit', (e) => {
 
 // Función para editar un material
 function editMaterial(id) {
-    // Obtener el material por su ID
+    console.log("Editando material con ID:", id);
     get(ref(database, `materiales/${id}`)).then((snapshot) => {
         if (snapshot.exists()) {
             const material = snapshot.val();
@@ -153,15 +190,21 @@ function editMaterial(id) {
             materialForm.dtoProv.value = material.dtoProv;
             materialForm.fechaActualizacion.value = material.fechaActualizacion;
             materialForm.notas.value = material.notas;
+        } else {
+            console.error("No se encontró el material con ID:", id);
         }
     }).catch((error) => console.error('Error al cargar material:', error));
 }
 
 // Función para eliminar un material
 function deleteMaterial(id) {
+    console.log("Eliminando material con ID:", id);
     if (confirm('¿Estás seguro de que deseas eliminar este material?')) {
         remove(ref(database, `materiales/${id}`)) // Eliminar el material por su ID
-            .then(() => loadMaterials()) // Recargar la lista de materiales
+            .then(() => {
+                console.log("Material eliminado correctamente.");
+                loadMaterials(); // Recargar la lista de materiales
+            })
             .catch((error) => console.error('Error al eliminar:', error));
     }
 }
